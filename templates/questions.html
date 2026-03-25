@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>问题管理 - {{ system_title }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', -apple-system, sans-serif; background: #f3f4f6; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #1e1b4b 0%, #4f46e5 100%); padding: 24px 40px; color: white; }
+        .header-content { max-width: 900px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 22px; font-weight: 600; }
+        .header a { color: white; text-decoration: none; padding: 8px 20px; border-radius: 8px; font-size: 14px; background: rgba(255,255,255,0.15); transition: all 0.3s; }
+        .header a:hover { background: rgba(255,255,255,0.25); }
+        .container { max-width: 900px; margin: 0 auto; padding: 40px; }
+        .card { background: white; border-radius: 16px; padding: 32px; margin-bottom: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .card h2 { color: #1f2937; font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+        .add-form { display: flex; gap: 12px; margin-bottom: 24px; }
+        .add-form input { flex: 1; padding: 14px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 15px; font-family: inherit; }
+        .add-form input:focus { outline: none; border-color: #4f46e5; }
+        .add-form button { padding: 14px 28px; background: #4f46e5; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .add-form button:hover { background: #4338ca; }
+        .question-list { list-style: none; }
+        .question-item { display: flex; align-items: center; gap: 16px; padding: 16px; border-bottom: 1px solid #f3f4f6; cursor: grab; transition: all 0.2s; }
+        .question-item:last-child { border-bottom: none; }
+        .question-item:hover { background: #f9fafb; }
+        .question-item.dragging { opacity: 0.5; background: #e0e7ff; }
+        .question-item.drag-over { border-top: 2px solid #4f46e5; }
+        .question-item .num { width: 32px; height: 32px; background: #e0e7ff; color: #4f46e5; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; flex-shrink: 0; }
+        .question-item .title { flex: 1; font-size: 15px; color: #374151; }
+        .question-item .actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .question-item .actions button { padding: 8px 14px; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
+        .question-item .actions .edit { background: #fef3c7; color: #d97706; }
+        .question-item .actions .edit:hover { background: #fde68a; }
+        .question-item .actions .delete { background: #fee2e2; color: #dc2626; }
+        .question-item .actions .delete:hover { background: #fecaca; }
+        .empty { text-align: center; padding: 40px; color: #9ca3af; }
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .modal.show { display: flex; }
+        .modal-content { background: white; border-radius: 16px; padding: 32px; width: 100%; max-width: 500px; }
+        .modal-content h3 { font-size: 18px; color: #1f2937; margin-bottom: 20px; }
+        .modal-content input { width: 100%; padding: 14px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 15px; margin-bottom: 20px; }
+        .modal-content input:focus { outline: none; border-color: #4f46e5; }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
+        .modal-actions button { padding: 12px 24px; border: none; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; }
+        .modal-actions .cancel { background: #f3f4f6; color: #6b7280; }
+        .modal-actions .save { background: #4f46e5; color: white; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>问题管理</h1>
+            <a href="/dashboard">返回后台</a>
+        </div>
+    </div>
+    <div class="container">
+        <div class="card">
+            <h2>添加新问题</h2>
+            <form class="add-form" method="POST">
+                <input type="hidden" name="action" value="add">
+                <input type="text" name="title" placeholder="请输入问题内容..." required>
+                <button type="submit">添加问题</button>
+            </form>
+        </div>
+        <div class="card">
+            <h2>问题列表（拖拽可排序）</h2>
+            {% if questions %}
+            <ul class="question-list" id="questionList">
+                {% for q in questions %}
+                <li class="question-item" draggable="true" data-id="{{ q[0] }}">
+                    <span class="num">{{ loop.index }}</span>
+                    <span class="title">{{ q[1] }}</span>
+                    <div class="actions">
+                        <button type="button" class="edit" onclick="editQuestion({{ q[0] }}, '{{ q[1] }}')">编辑</button>
+                        <button type="button" class="delete" onclick="deleteQuestion({{ q[0] }})">删除</button>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="empty">暂无问题，请添加</div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <h3>编辑问题</h3>
+            <form method="POST" id="editForm">
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="id" id="editId">
+                <input type="text" name="title" id="editTitle" required>
+                <div class="modal-actions">
+                    <button type="button" class="cancel" onclick="closeModal()">取消</button>
+                    <button type="submit" class="save">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        function editQuestion(id, title) {
+            document.getElementById('editId').value = id;
+            document.getElementById('editTitle').value = title;
+            document.getElementById('editModal').classList.add('show');
+        }
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('show');
+        }
+        function deleteQuestion(id) {
+            if (confirm('确定要删除这个问题吗？')) {
+                const formData = new FormData();
+                formData.append('action', 'delete');
+                formData.append('id', id);
+                fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData
+                }).then(() => window.location.reload());
+            }
+        }
+        
+        const list = document.getElementById('questionList');
+        if (list) {
+            const items = list.querySelectorAll('.question-item');
+            let draggedEl = null;
+            
+            items.forEach(item => {
+                item.addEventListener('dragstart', function(e) {
+                    draggedEl = this;
+                    this.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+                
+                item.addEventListener('dragend', function() {
+                    this.classList.remove('dragging');
+                    items.forEach(i => i.classList.remove('drag-over'));
+                });
+                
+                item.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    if (this !== draggedEl) {
+                        this.classList.add('drag-over');
+                    }
+                });
+                
+                item.addEventListener('dragleave', function() {
+                    this.classList.remove('drag-over');
+                });
+                
+                item.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('drag-over');
+                    
+                    if (draggedEl && this !== draggedEl) {
+                        const allItems = [...list.querySelectorAll('.question-item')];
+                        const fromIndex = allItems.indexOf(draggedEl);
+                        const toIndex = allItems.indexOf(this);
+                        
+                        if (fromIndex < toIndex) {
+                            this.after(draggedEl);
+                        } else {
+                            this.before(draggedEl);
+                        }
+                        
+                        updateOrderNums();
+                        saveOrder();
+                    }
+                });
+            });
+            
+            function updateOrderNums() {
+                const items = list.querySelectorAll('.question-item');
+                items.forEach((item, idx) => {
+                    item.querySelector('.num').textContent = idx + 1;
+                });
+            }
+            
+            function saveOrder() {
+                const orderData = [...list.querySelectorAll('.question-item')].map(li => li.dataset.id);
+                const formData = new FormData();
+                formData.append('action', 'reorder');
+                formData.append('order_data', JSON.stringify(orderData));
+                
+                fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData
+                }).then(response => {
+                    if (response.ok) {
+                        console.log('Order saved successfully');
+                    }
+                }).catch(error => {
+                    console.error('Error saving order:', error);
+                });
+            }
+            
+            // Handle add form
+            document.querySelector('.add-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                fetch(window.location.href, {
+                    method: 'POST',
+                    body: new FormData(this)
+                }).then(() => window.location.reload());
+            });
+            
+            // Handle edit form
+            document.getElementById('editForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                fetch(window.location.href, {
+                    method: 'POST',
+                    body: new FormData(this)
+                }).then(() => window.location.reload());
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>问卷反馈结果 - {{ system_title }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', -apple-system, sans-serif; background: #f3f4f6; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #1e1b4b 0%, #4f46e5 100%); padding: 24px 40px; color: white; }
+        .header-content { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 22px; font-weight: 600; }
+        .header a { color: white; text-decoration: none; padding: 8px 20px; border-radius: 8px; font-size: 14px; background: rgba(255,255,255,0.15); transition: all 0.3s; }
+        .header a:hover { background: rgba(255,255,255,0.25); }
+        .container { max-width: 1400px; margin: 0 auto; padding: 40px; }
+        .page-title { color: #1f2937; font-size: 20px; font-weight: 600; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }
+        .chart-btn { padding: 12px 24px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+        .chart-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(16,185,129,0.4); }
+        .table-container { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
+        th { background: #f9fafb; padding: 16px; text-align: left; font-size: 13px; font-weight: 600; color: #6b7280; text-transform: uppercase; white-space: nowrap; }
+        th .filter-select { margin-top: 8px; width: 100%; padding: 6px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 12px; background: white; }
+        td { padding: 16px; font-size: 14px; color: #4b5563; border-bottom: 1px solid #f3f4f6; white-space: nowrap; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f9fafb; }
+        .score { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; font-weight: 600; font-size: 14px; }
+        .score.high { background: #d1fae5; color: #059669; }
+        .score.medium { background: #fef3c7; color: #d97706; }
+        .score.low { background: #fee2e2; color: #dc2626; }
+        .view-btn { display: inline-block; padding: 8px 16px; background: #4f46e5; color: white; text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 500; }
+        .view-btn:hover { background: #4338ca; }
+        .empty { text-align: center; padding: 60px; color: #9ca3af; }
+        .chart-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .chart-modal.show { display: flex; }
+        .chart-content { background: white; border-radius: 16px; padding: 32px; max-width: 900px; width: 95%; max-height: 90vh; overflow-y: auto; }
+        .chart-content h2 { margin-bottom: 24px; color: #1f2937; font-size: 20px; }
+        .chart-close { float: right; background: #f3f4f6; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+        .chart-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+        .chart-item { background: #f9fafb; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .chart-item h3 { font-size: 14px; color: #374151; margin-bottom: 16px; text-align: center; }
+        .chart-item canvas { max-width: 200px !important; max-height: 200px !important; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>{{ system_title }}</h1>
+            <a href="/dashboard">返回后台</a>
+        </div>
+    </div>
+    <div class="container">
+        <div class="page-title">
+            <span>问卷反馈结果（共 {{ surveys|length }} 条）</span>
+            <button class="chart-btn" onclick="showChart()">问卷报告图</button>
+        </div>
+        <div class="table-container">
+            {% if surveys %}
+            <table id="surveyTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>昵称</th>
+                        {% for q in questions %}<th>{{ q[1] }}</th>{% endfor %}
+                        <th>提交时间</th>
+                        <th>操作</th>
+                    </tr>
+                    <tr>
+                        <th></th>
+                        <th></th>
+                        {% for q in questions %}
+                        <th>
+                            <select class="filter-select" onchange="filterTable(this, {{ q[0] }})">
+                                <option value="">全部</option>
+                                <option value="1">1分</option>
+                                <option value="2">2分</option>
+                                <option value="3">3分</option>
+                                <option value="4">4分</option>
+                                <option value="5">5分</option>
+                            </select>
+                        </th>
+                        {% endfor %}
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for survey in surveys %}
+                    <tr data-id="{{ survey.id }}">
+                        <td>#{{ survey.id }}</td>
+                        <td>{{ survey.nickname }}</td>
+                        {% for q in questions %}
+                        {% set qid = q[0]|string %}
+                        {% if survey.answers[qid] %}
+                        <td data-qid="{{ qid }}"><span class="score {% if survey.answers[qid].rating >= 4 %}high{% elif survey.answers[qid].rating >= 3 %}medium{% else %}low{% endif %}">{{ survey.answers[qid].rating }}</span></td>
+                        {% else %}<td data-qid="{{ qid }}">-</td>{% endif %}
+                        {% endfor %}
+                        <td>{{ survey.created_at }}</td>
+                        <td><a href="/survey/{{ survey.id }}" class="view-btn">查看详情</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="empty">暂无问卷数据</div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="chart-modal" id="chartModal">
+        <div class="chart-content">
+            <button class="chart-close" onclick="closeChart()">关闭</button>
+            <h2>问卷统计报告</h2>
+            <div class="chart-grid" id="chartGrid"></div>
+        </div>
+    </div>
+    
+    <script>
+        function filterTable(select, qid) {
+            const filterValue = select.value;
+            const rows = document.querySelectorAll('#surveyTable tbody tr');
+            rows.forEach(row => {
+                const cell = row.querySelector(`td[data-qid="${qid}"]`);
+                if (!cell) return;
+                const score = cell.textContent.trim();
+                if (filterValue === '' || score === filterValue) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        function showChart() {
+            const questions = {{ questions|tojson }};
+            const surveys = {{ surveys|tojson }};
+            
+            const stats = {};
+            questions.forEach(q => {
+                stats[q[0]] = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+            });
+            
+            surveys.forEach(survey => {
+                Object.keys(survey.answers).forEach(qid => {
+                    const rating = survey.answers[qid].rating;
+                    if (stats[qid] && rating >= 1 && rating <= 5) {
+                        stats[qid][rating]++;
+                    }
+                });
+            });
+            
+            const grid = document.getElementById('chartGrid');
+            grid.innerHTML = '';
+            
+            questions.forEach((q, idx) => {
+                const data = [stats[q[0]][1], stats[q[0]][2], stats[q[0]][3], stats[q[0]][4], stats[q[0]][5]];
+                
+                const item = document.createElement('div');
+                item.className = 'chart-item';
+                item.innerHTML = `<h3>${idx + 1}. ${q[1]}</h3><canvas id="chart${q[0]}"></canvas>`;
+                grid.appendChild(item);
+                
+                const ctx = document.getElementById(`chart${q[0]}`).getContext('2d');
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['1', '2', '3', '4', '5'],
+                        datasets: [{
+                            data: data,
+                            backgroundColor: [
+                                '#10b981',
+                                '#3b82f6',
+                                '#ef4444',
+                                '#f59e0b',
+                                '#6b7280'
+                            ],
+                            borderColor: '#ffffff',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { enabled: false },
+                            datalabels: {
+                                color: '#fff',
+                                font: { size: 16, weight: 'bold' },
+                                formatter: function(value, context) {
+                                    return (context.dataIndex + 1).toString();
+                                }
+                            }
+                        }
+                    },
+                    plugins: [ChartDataLabels]
+                });
+            });
+            
+            document.getElementById('chartModal').classList.add('show');
+        }
+        
+        function closeChart() {
+            document.getElementById('chartModal').classList.remove('show');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>员工满意度调查问卷</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --primary: #4f46e5; --primary-light: #818cf8; --success: #10b981; --danger: #ef4444; --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb; --gray-300: #d1d5db; --gray-400: #9ca3af; --gray-500: #6b7280; --gray-600: #4b5563; --gray-700: #374151; --gray-800: #1f2937; --gray-900: #111827; }
+        body { font-family: 'Noto Sans SC', -apple-system, sans-serif; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4f46e5 100%); min-height: 100vh; padding: 40px 20px; }
+        .container { max-width: 720px; margin: 0 auto; background: rgba(255,255,255,0.98); border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4); overflow: hidden; }
+        .progress-bar { height: 6px; background: var(--gray-200); }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%); width: 0%; transition: width 0.5s; }
+        .header { text-align: center; padding: 50px 40px 30px; background: linear-gradient(180deg, var(--gray-50) 0%, white 100%); border-bottom: 1px solid var(--gray-100); }
+        .header-icon { width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; box-shadow: 0 10px 30px rgba(79,70,229,0.3); animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        .header-icon svg { width: 40px; height: 40px; fill: white; }
+        .header h1 { color: var(--gray-900); font-size: 26px; font-weight: 700; margin-bottom: 12px; }
+        .header p { color: var(--gray-500); font-size: 15px; margin-bottom: 20px; }
+        .anonymous-badge { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); color: #047857; padding: 8px 20px; border-radius: 50px; font-size: 13px; font-weight: 500; border: 1px solid #a7f3d0; }
+        .anonymous-badge svg { width: 16px; height: 16px; fill: currentColor; }
+        .form-content { padding: 40px; }
+        .question { margin-bottom: 40px; padding: 32px; background: white; border-radius: 20px; border: 2px solid var(--gray-100); transition: all 0.4s; position: relative; }
+        .question::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--gray-200); transition: all 0.4s; }
+        .question:hover { border-color: var(--gray-200); box-shadow: 0 8px 30px rgba(0,0,0,0.08); }
+        .question.answered::before { background: linear-gradient(180deg, var(--primary) 0%, var(--primary-light) 100%); }
+        .question-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--gray-100); color: var(--gray-600); border-radius: 8px; font-size: 13px; font-weight: 600; margin-right: 12px; transition: all 0.3s; }
+        .question.answered .question-number { background: var(--primary); color: white; }
+        .question-title { font-size: 17px; color: var(--gray-800); margin-bottom: 28px; font-weight: 500; display: flex; align-items: flex-start; line-height: 1.5; }
+        .rating-container { display: flex; flex-direction: column; align-items: center; }
+        .rating-labels { display: flex; justify-content: space-between; width: 100%; max-width: 480px; margin-bottom: 20px; }
+        .rating-label { font-size: 13px; font-weight: 500; text-align: center; padding: 6px 16px; border-radius: 20px; }
+        .rating-label.left { color: var(--danger); background: #fef2f2; }
+        .rating-label.right { color: var(--success); background: #ecfdf5; }
+        .rating-boxes { display: flex; gap: 12px; }
+        .rating-box { width: 72px; height: 72px; border: 2px solid var(--gray-200); border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); background: white; position: relative; overflow: hidden; }
+        .rating-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); opacity: 0; transition: opacity 0.3s; }
+        .rating-box:hover { border-color: var(--primary-light); transform: translateY(-4px) scale(1.02); box-shadow: 0 12px 24px rgba(79,70,229,0.15); }
+        .rating-box.selected { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 12px 24px rgba(79,70,229,0.25); }
+        .rating-box.selected::before { opacity: 1; }
+        .rating-box .num { font-size: 22px; font-weight: 700; color: var(--gray-700); position: relative; z-index: 1; transition: all 0.3s; }
+        .rating-box.selected .num { color: white; }
+        .rating-box .emoji { font-size: 20px; position: relative; z-index: 1; transition: all 0.3s; }
+        .rating-box.selected .emoji { animation: bounce 0.5s ease; }
+        @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+        .feedback-section { margin-top: 24px; padding: 24px; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 16px; border: 1px solid var(--gray-200); display: none; position: relative; }
+        .feedback-section::before { content: ''; position: absolute; top: -1px; left: 24px; right: 24px; height: 3px; background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%); border-radius: 3px 3px 0 0; }
+        .feedback-section.show { display: block; animation: slideDown 0.4s cubic-bezier(0.4,0,0.2,1); }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+        .feedback-section h4 { color: var(--gray-700); margin-bottom: 16px; font-size: 14px; font-weight: 600; }
+        .feedback-section textarea { width: 100%; height: 100px; padding: 16px; border: 2px solid var(--gray-200); border-radius: 12px; font-size: 14px; font-family: inherit; resize: vertical; transition: all 0.3s; background: white; }
+        .feedback-section textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(79,70,229,0.1); }
+        .suggestion-section { margin-top: 40px; padding: 36px; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-radius: 20px; border: 2px solid #bae6fd; }
+        .suggestion-section h3 { color: var(--gray-800); margin-bottom: 20px; font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 12px; }
+        .suggestion-section h3 svg { width: 24px; height: 24px; fill: #0284c7; }
+        .suggestion-section textarea { width: 100%; height: 130px; padding: 18px; border: 2px solid var(--gray-200); border-radius: 14px; font-size: 14px; font-family: inherit; resize: vertical; transition: all 0.3s; background: white; }
+        .suggestion-section textarea:focus { outline: none; border-color: #0ea5e9; box-shadow: 0 0 0 4px rgba(14,165,233,0.15); }
+        .submit-container { text-align: center; margin-top: 50px; padding-top: 40px; border-top: 1px solid var(--gray-100); }
+        .submit-btn { background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%); color: white; border: none; padding: 18px 60px; font-size: 17px; border-radius: 50px; cursor: pointer; transition: all 0.4s; font-weight: 600; box-shadow: 0 8px 24px rgba(79,70,229,0.35); }
+        .submit-btn:hover { transform: translateY(-3px); box-shadow: 0 16px 40px rgba(79,70,229,0.4); }
+        .submit-btn:disabled { background: var(--gray-400); cursor: not-allowed; }
+        .success-message { display: none; text-align: center; padding: 80px 40px; }
+        .success-message.show { display: block; animation: fadeInScale 0.6s cubic-bezier(0.4,0,0.2,1); }
+        @keyframes fadeInScale { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        .success-icon { width: 120px; height: 120px; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 32px; animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16,185,129,0.4); } 50% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(16,185,129,0); } }
+        .success-icon svg { width: 60px; height: 60px; fill: #059669; }
+        .success-message h2 { color: var(--gray-900); font-size: 28px; margin-bottom: 16px; font-weight: 700; }
+        .success-message p { color: var(--gray-500); font-size: 16px; }
+        .loading { text-align: center; padding: 60px; color: var(--gray-500); }
+        .user-bar { position: absolute; top: 16px; right: 24px; display: flex; align-items: center; gap: 12px; z-index: 10; }
+        .user-bar .nickname { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 8px 16px; border-radius: 25px; font-size: 14px; font-weight: 500; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); }
+        .user-bar .login-btn { padding: 8px 20px; background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%); color: white; border: none; border-radius: 25px; font-size: 14px; font-weight: 500; cursor: pointer; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3); transition: all 0.3s; }
+        .user-bar .login-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4); }
+        .user-bar .logout-btn { padding: 8px 16px; background: #f3f4f6; color: #6b7280; border: none; border-radius: 25px; font-size: 13px; cursor: pointer; transition: all 0.3s; }
+        .user-bar .logout-btn:hover { background: #e5e7eb; }
+        .success-actions { margin-top: 24px; }
+        .success-actions button { padding: 12px 32px; margin: 0 8px; border: none; border-radius: 25px; font-size: 15px; font-weight: 500; cursor: pointer; }
+        .success-actions .view-btn { background: var(--primary); color: white; }
+        .success-actions .new-btn { background: var(--gray-200); color: var(--gray-700); }
+        .success-actions .logout-btn-style { background: #fee2e2; color: #dc2626; }
+        .success-actions button:hover { transform: translateY(-2px); }
+        .my-survey { margin-top: 32px; padding: 24px; background: white; border-radius: 16px; }
+        .my-survey h3 { color: var(--gray-800); font-size: 16px; margin-bottom: 16px; }
+        @media (max-width: 640px) { body { padding: 20px 12px; } .container { border-radius: 20px; } .header { padding: 36px 24px 24px; } .header h1 { font-size: 22px; } .form-content { padding: 24px 16px; } .question { padding: 24px 20px; border-radius: 16px; } .question-title { font-size: 15px; } .rating-boxes { gap: 8px; } .rating-box { width: 56px; height: 56px; } .rating-box .num { font-size: 18px; } .rating-box .emoji { font-size: 16px; } .rating-labels { max-width: 320px; } .submit-btn { padding: 16px 48px; font-size: 16px; width: 100%; } .user-bar { position: static; margin-top: 16px; justify-content: center; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="login-screen" id="loginScreen">
+            <div class="header">
+                <div class="header-icon"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg></div>
+                <h1 id="surveyTitle">加载中...</h1>
+                <p id="surveySubtitle">请先登录后再填写问卷</p>
+            </div>
+            <div class="form-content">
+                <div style="max-width:400px; margin:0 auto;">
+                    <h3 style="margin-bottom:24px; color:#1f2937; text-align:center;">用户登录</h3>
+                    <input type="text" id="nicknameInput" placeholder="请输入昵称" style="width:100%; padding:16px; border:2px solid #e5e7eb; border-radius:12px; font-size:15px; margin-bottom:16px;">
+                    <input type="text" id="cityInput" placeholder="请输入所在城市" style="width:100%; padding:16px; border:2px solid #e5e7eb; border-radius:12px; font-size:15px; margin-bottom:24px;">
+                    <button onclick="doLogin()" style="width:100%; padding:16px; background:linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color:white; border:none; border-radius:12px; font-size:16px; font-weight:600; cursor:pointer; box-shadow:0 4px 12px rgba(79,70,229,0.3);">进入问卷</button>
+                </div>
+            </div>
+        </div>
+        <div class="questionnaire-content" id="questionnaire" style="display:none;">
+            <div class="header">
+                <div class="user-bar" id="userBar">
+                    <span class="nickname" id="userNickname" style="display:none;"></span>
+                    <button class="logout-btn" id="logoutBtn" onclick="logout()" style="display:none;">退出</button>
+                </div>
+                <div class="header-icon"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg></div>
+                <h1 id="surveyTitleQ">加载中...</h1>
+                <p id="surveySubtitleQ">请稍候</p>
+                <span class="anonymous-badge" id="surveyBadgeQ"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg><span>加载中...</span></span>
+            </div>
+            <div class="form-content" id="formContent">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+        <div class="success-message" id="successMessage">
+            <div class="success-icon"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+            <h2>提交成功！</h2>
+            <p>感谢您的参与，您的反馈对我们非常重要！</p>
+            <div class="success-actions">
+                <button class="view-btn" onclick="viewMySurvey()">查看我的问卷</button>
+                <button class="new-btn" onclick="fillNewSurvey()">填写新问卷</button>
+                <button class="logout-btn-style" onclick="logoutAndGoHome()">退出登录</button>
+            </div>
+            <div class="my-survey" id="mySurvey" style="display:none;"></div>
+        </div>
+    </div>
+    <script>
+        let questions = [];
+        const feedbackQuestions = { 1: '是哪些方面让您不满意？请详细说明：', 5: '哪些方面让您有非常好的体验？请与我们分享：' };
+        
+        function renderQuestions() {
+            const formContent = document.getElementById('formContent');
+            let html = '<form id="surveyForm">';
+            questions.forEach((q, idx) => {
+                html += `<div class="question" data-question="${q.id}" data-num="${idx+1}">
+                    <div class="question-title"><span class="question-number">${idx+1}</span>${q.title}</div>
+                    <div class="rating-container">
+                        <div class="rating-labels"><span class="rating-label left">不满意</span><span class="rating-label right">非常满意</span></div>
+                        <div class="rating-boxes">
+                            <div class="rating-box" data-value="1"><span class="num">1</span><span class="emoji">😞</span></div>
+                            <div class="rating-box" data-value="2"><span class="num">2</span><span class="emoji">😕</span></div>
+                            <div class="rating-box" data-value="3"><span class="num">3</span><span class="emoji">😐</span></div>
+                            <div class="rating-box" data-value="4"><span class="num">4</span><span class="emoji">🙂</span></div>
+                            <div class="rating-box" data-value="5"><span class="num">5</span><span class="emoji">😄</span></div>
+                        </div>
+                        <div class="feedback-section" id="feedback_${q.id}"><h4 id="feedback_title_${q.id}"></h4><textarea id="feedback_text_${q.id}" placeholder="请输入您的具体想法..."></textarea></div>
+                    </div>
+                </div>`;
+            });
+            html += `<div class="suggestion-section"><h3 id="suggestionTitle"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg></h3><textarea id="suggestions" placeholder="请写下您的宝贵建议..."></textarea></div>`;
+            html += '<div class="submit-container"><button type="submit" class="submit-btn">提交问卷</button></div></form>';
+            formContent.innerHTML = html;
+            initEvents();
+            updateSuggestionTitle();
+        }
+        
+        function updateSuggestionTitle() {
+            fetch('/api/settings').then(r => r.json()).then(data => {
+                const suggestionEl = document.getElementById('suggestionTitle');
+                if (suggestionEl) {
+                    suggestionEl.innerHTML = '<svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>' + (data.suggestion_title || '您对公司还有哪些建议？');
+                }
+            });
+        }
+        
+        function updateProgress() {
+            const answered = document.querySelectorAll('.question.answered').length;
+            const progress = (answered / questions.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+        
+        function initEvents() {
+            document.querySelectorAll('.question').forEach(question => {
+                const questionId = question.dataset.question;
+                const boxes = question.querySelectorAll('.rating-box');
+                const feedbackSection = document.getElementById(`feedback_${questionId}`);
+                const feedbackTitle = document.getElementById(`feedback_title_${questionId}`);
+                boxes.forEach(box => {
+                    box.addEventListener('click', function() {
+                        boxes.forEach(b => b.classList.remove('selected'));
+                        this.classList.add('selected');
+                        question.classList.add('answered');
+                        const value = parseInt(this.dataset.value);
+                        if (feedbackQuestions[value]) { feedbackTitle.textContent = feedbackQuestions[value]; feedbackSection.classList.add('show'); }
+                        else { feedbackSection.classList.remove('show'); }
+                        updateProgress();
+                    });
+                });
+            });
+            
+            document.getElementById('surveyForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const answers = {};
+                let allAnswered = true;
+                questions.forEach(q => {
+                    const question = document.querySelector(`[data-question="${q.id}"]`);
+                    const selectedBox = question.querySelector('.rating-box.selected');
+                    if (!selectedBox) { allAnswered = false; }
+                    else {
+                        const rating = parseInt(selectedBox.dataset.value);
+                        const feedbackText = document.getElementById(`feedback_text_${q.id}`).value;
+                        answers[q.id] = { rating: rating, feedback: feedbackText || '' };
+                    }
+                });
+                if (!allAnswered) { alert('请回答所有问题后再提交！'); return; }
+                const submitBtn = document.querySelector('.submit-btn');
+                submitBtn.textContent = '提交中...';
+                submitBtn.disabled = true;
+                fetch('/api/survey', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ answers: answers, suggestions: document.getElementById('suggestions').value }) })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) { window.location.href = '/success'; }
+                    else { alert(data.message || '提交失败'); submitBtn.textContent = '提交问卷'; submitBtn.disabled = false; }
+                })
+                .catch(err => { alert('提交失败'); submitBtn.textContent = '提交问卷'; submitBtn.disabled = false; });
+            });
+        }
+        
+        function showLoginModal() { document.getElementById('loginModal').style.display = 'flex'; }
+        function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
+        
+        function doLogin() {
+            const nickname = document.getElementById('nicknameInput').value.trim();
+            const city = document.getElementById('cityInput').value.trim();
+            if (!nickname) { alert('请输入昵称'); return; }
+            if (!city) { alert('请输入所在城市'); return; }
+            fetch('/api/user', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ nickname, city }) })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('nicknameInput').value = '';
+                    document.getElementById('cityInput').value = '';
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('questionnaire').style.display = 'block';
+                    document.getElementById('successMessage').classList.remove('show');
+                    document.getElementById('mySurvey').style.display = 'none';
+                    resetSurveyForm();
+                    updateUserBar(data.nickname, data.city);
+                } else { alert(data.error || '登录失败'); }
+            });
+        }
+        
+        function resetSurveyForm() {
+            document.querySelectorAll('.rating-box.selected').forEach(b => b.classList.remove('selected'));
+            document.querySelectorAll('.question').forEach(q => q.classList.remove('answered'));
+            document.querySelectorAll('.feedback-section.show').forEach(f => f.classList.remove('show'));
+            document.querySelectorAll('textarea').forEach(t => t.value = '');
+            updateProgress();
+        }
+        
+        function logout() {
+            fetch('/api/user/logout', { method: 'POST' })
+            .then(() => { 
+                document.getElementById('questionnaire').style.display = 'none';
+                document.getElementById('successMessage').classList.remove('show');
+                document.getElementById('mySurvey').style.display = 'none';
+                document.getElementById('loginScreen').style.display = 'block';
+                document.getElementById('nicknameInput').value = '';
+                document.getElementById('cityInput').value = '';
+                document.getElementById('userNickname').style.display = 'none';
+                document.getElementById('logoutBtn').style.display = 'none';
+            });
+        }
+        
+        function logoutAndGoHome() {
+            fetch('/api/user/logout', { method: 'POST' })
+            .then(() => { window.location.href = '/survey'; });
+        }
+        
+        function updateUserBar(nickname, city) {
+            if (nickname) {
+                document.getElementById('userNickname').textContent = nickname + ' (' + city + ')';
+                document.getElementById('userNickname').style.display = 'inline';
+                document.getElementById('logoutBtn').style.display = 'inline';
+            }
+        }
+        
+        function viewMySurvey() {
+            fetch('/api/my-survey')
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) { alert(data.error); return; }
+                let html = '<div style="margin-bottom:20px;"><button onclick="backToSuccess()" style="padding:10px 20px; background:#f3f4f6; color:#4b5563; border:none; border-radius:8px; cursor:pointer;">← 返回</button></div>';
+                html += '<h3>我的问卷反馈</h3>';
+                data.questions.forEach((q, idx) => {
+                    const ans = data.answers[q.id];
+                    html += `<div style="margin-bottom:16px; padding:12px; background:#f9fafb; border-radius:8px;">
+                        <div style="font-size:14px; color:#374151; margin-bottom:8px;">${idx+1}. ${q.title}</div>
+                        <div style="font-size:18px; font-weight:600; color:${ans && ans.rating >= 4 ? '#059669' : ans && ans.rating >= 3 ? '#d97706' : '#dc2626'};">${ans ? ans.rating + '分' : '未作答'}</div>
+                        ${ans && ans.feedback ? '<div style="font-size:13px; color:#6b7280; margin-top:4px;">' + ans.feedback + '</div>' : ''}
+                    </div>`;
+                });
+                if (data.suggestions) {
+                    html += `<div style="margin-top:16px; padding:12px; background:#f0f9ff; border-radius:8px;">
+                        <div style="font-size:14px; color:#374151; margin-bottom:8px;">总体建议</div>
+                        <div style="font-size:14px; color:#334155;">${data.suggestions}</div>
+                    </div>`;
+                }
+                html += `<div style="font-size:12px; color:#9ca3af; margin-top:16px;">提交时间：${data.created_at}</div>`;
+                document.getElementById('mySurvey').innerHTML = html;
+                document.getElementById('mySurvey').style.display = 'block';
+            });
+        }
+        
+        function backToSuccess() {
+            document.getElementById('mySurvey').style.display = 'none';
+        }
+        
+        function fillNewSurvey() {
+            document.getElementById('successMessage').classList.remove('show');
+            document.getElementById('questionnaire').style.display = 'block';
+            document.getElementById('mySurvey').style.display = 'none';
+            document.querySelectorAll('.rating-box.selected').forEach(b => b.classList.remove('selected'));
+            document.querySelectorAll('.question').forEach(q => q.classList.remove('answered'));
+            document.querySelectorAll('.feedback-section.show').forEach(f => f.classList.remove('show'));
+            document.querySelectorAll('textarea').forEach(t => t.value = '');
+            updateProgress();
+        }
+        
+        fetch('/api/user').then(r => r.json()).then(data => { 
+            if (data.logged_in) {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('questionnaire').style.display = 'block';
+                updateUserBar(data.nickname, data.city);
+            }
+        });
+        fetch('/api/questions').then(r => r.json()).then(data => { questions = data; renderQuestions(); updateProgress(); });
+        fetch('/api/settings').then(r => r.json()).then(data => {
+            document.getElementById('surveyTitle').textContent = data.title + '调查';
+            document.getElementById('surveySubtitle').textContent = data.subtitle;
+            document.getElementById('surveyTitleQ').textContent = data.title + '调查';
+            document.getElementById('surveySubtitleQ').textContent = data.subtitle;
+            document.getElementById('surveyBadgeQ').querySelector('span').textContent = data.badge;
+            document.title = data.title + '调查问卷';
+        });
+    </script>
+</body>
+</html>

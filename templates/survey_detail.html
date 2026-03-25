@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>问卷详情 - {{ system_title }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', -apple-system, sans-serif; background: #f3f4f6; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #1e1b4b 0%, #4f46e5 100%); padding: 24px 40px; color: white; }
+        .header-content { max-width: 900px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 22px; font-weight: 600; }
+        .header a { color: white; text-decoration: none; padding: 8px 20px; border-radius: 8px; font-size: 14px; background: rgba(255,255,255,0.15); }
+        .container { max-width: 900px; margin: 0 auto; padding: 40px; }
+        .card { background: white; border-radius: 16px; padding: 32px; margin-bottom: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #e5e7eb; }
+        .card-header h2 { color: #1f2937; font-size: 18px; font-weight: 600; }
+        .card-header .time { color: #9ca3af; font-size: 13px; }
+        .question-item { margin-bottom: 28px; }
+        .question-item:last-child { margin-bottom: 0; }
+        .question-title { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .question-title .num { width: 28px; height: 28px; background: #e0e7ff; color: #4f46e5; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; }
+        .question-title .label { color: #374151; font-size: 15px; font-weight: 500; }
+        .rating-display { display: flex; align-items: center; gap: 12px; }
+        .rating-box { width: 48px; height: 48px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; }
+        .rating-box.high { background: #d1fae5; color: #059669; }
+        .rating-box.medium { background: #fef3c7; color: #d97706; }
+        .rating-box.low { background: #fee2e2; color: #dc2626; }
+        .rating-text { color: #6b7280; font-size: 13px; }
+        .feedback-box { margin-top: 12px; padding: 16px; background: #f9fafb; border-radius: 10px; border-left: 3px solid #4f46e5; }
+        .feedback-box .label { color: #9ca3af; font-size: 12px; margin-bottom: 6px; }
+        .feedback-box .text { color: #4b5563; font-size: 14px; line-height: 1.6; }
+        .suggestion-card { background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1px solid #bae6fd; }
+        .suggestion-card h3 { color: #0369a1; font-size: 15px; margin-bottom: 12px; }
+        .suggestion-card .content { color: #334155; font-size: 14px; line-height: 1.7; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>问卷详情</h1>
+            <a href="/surveys">返回列表</a>
+        </div>
+    </div>
+    <div class="container">
+        <div class="card">
+            <div class="card-header"><h2>评分详情</h2><span class="time">提交时间：{{ survey.created_at }}</span></div>
+            {% for qid, qtitle in survey.questions.items() %}
+            <div class="question-item">
+                <div class="question-title"><span class="num">{{ loop.index }}</span><span class="label">{{ qtitle }}</span></div>
+                {% if survey.answers[qid] %}
+                <div class="rating-display">
+                    <div class="rating-box {% if survey.answers[qid].rating >= 4 %}high{% elif survey.answers[qid].rating >= 3 %}medium{% else %}low{% endif %}">{{ survey.answers[qid].rating }}</div>
+                    <span class="rating-text">分</span>
+                </div>
+                {% if survey.answers[qid].feedback %}
+                <div class="feedback-box"><div class="label">详细反馈</div><div class="text">{{ survey.answers[qid].feedback }}</div></div>
+                {% endif %}
+                {% else %}<div class="rating-text">未作答</div>{% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        <div class="card suggestion-card">
+            <h3>总体建议</h3>
+            <div class="content">{{ survey.suggestions if survey.suggestions else '无' }}</div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>提交成功 - {{ system_title }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', -apple-system, sans-serif; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4f46e5 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .container { max-width: 560px; width: 100%; background: rgba(255,255,255,0.98); border-radius: 24px; padding: 80px 40px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4); position: relative; }
+        .success-icon { width: 120px; height: 120px; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 32px; animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16,185,129,0.4); } 50% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(16,185,129,0); } }
+        .success-icon svg { width: 60px; height: 60px; fill: #059669; }
+        h1 { color: #1f2937; font-size: 28px; font-weight: 700; margin-bottom: 16px; }
+        p { color: #6b7280; font-size: 16px; margin-bottom: 40px; line-height: 1.6; }
+        .btn-group { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+        .btn { padding: 14px 32px; border-radius: 50px; font-size: 15px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all 0.3s; border: none; }
+        .btn-primary { background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color: white; box-shadow: 0 8px 24px rgba(79,70,229,0.35); }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(79,70,229,0.4); }
+        .btn-secondary { background: #f3f4f6; color: #4b5563; }
+        .btn-secondary:hover { background: #e5e7eb; }
+        .btn-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
+        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(16,185,129,0.4); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">
+            <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        </div>
+        <h1>提交成功！</h1>
+        <p>感谢您的参与，您的反馈对我们非常重要！</p>
+        <div class="btn-group">
+            <a href="/api/my-survey" class="btn btn-primary" onclick="viewMySurvey(event)">查看我的问卷</a>
+            <a href="/survey" class="btn btn-secondary">填写新问卷</a>
+            <button onclick="logout()" class="btn btn-success">退出</button>
+        </div>
+    </div>
+    <script>
+        let originalContent = '';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            originalContent = document.querySelector('.container').innerHTML;
+        });
+        
+        function viewMySurvey(e) {
+            e.preventDefault();
+            fetch('/api/my-survey')
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) { alert(data.error); return; }
+                let html = '<h3 style="margin-bottom:20px; color:#1f2937; font-size:18px;">我的问卷反馈</h3>';
+                data.questions.forEach((q, idx) => {
+                    const ans = data.answers[q.id];
+                    html += `<div style="margin-bottom:16px; padding:16px; background:#f9fafb; border-radius:12px;">
+                        <div style="font-size:14px; color:#374151; margin-bottom:8px; font-weight:500;">${idx+1}. ${q.title}</div>
+                        <div style="font-size:20px; font-weight:700; color:${ans && ans.rating >= 4 ? '#059669' : ans && ans.rating >= 3 ? '#d97706' : '#dc2626'};">${ans ? ans.rating + '分' : '未作答'}</div>
+                        ${ans && ans.feedback ? '<div style="font-size:13px; color:#6b7280; margin-top:8px;">' + ans.feedback + '</div>' : ''}
+                    </div>`;
+                });
+                if (data.suggestions) {
+                    html += `<div style="margin-top:16px; padding:16px; background:#f0f9ff; border-radius:12px;">
+                        <div style="font-size:14px; color:#374151; margin-bottom:8px; font-weight:500;">总体建议</div>
+                        <div style="font-size:14px; color:#334155;">${data.suggestions}</div>
+                    </div>`;
+                }
+                html += `<div style="font-size:12px; color:#9ca3af; margin-top:20px;">提交时间：${data.created_at}</div>`;
+                html += `<div style="position:absolute; bottom:24px; right:24px;"><button onclick="backToMain()" style="padding:14px 32px; background:linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color:white; border:none; border-radius:50px; cursor:pointer; font-size:15px; font-weight:600; box-shadow:0 4px 12px rgba(79,70,229,0.3);">← 返回</button></div>`;
+                document.querySelector('.container').innerHTML = html;
+            });
+        }
+        
+        function backToMain() {
+            document.querySelector('.container').innerHTML = originalContent;
+        }
+        
+        function logout() {
+            fetch('/api/user/logout', { method: 'POST' })
+            .then(() => { window.location.href = '/survey'; });
+        }
+    </script>
+</body>
+</html>

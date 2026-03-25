@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>问卷设置 - {{ system_title }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans Sans', -apple-system, sans-serif; background: #f3f4f6; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #1e1b4b 0%, #4f46e5 100%); padding: 24px 40px; color: white; }
+        .header-content { max-width: 700px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 22px; font-weight: 600; }
+        .header a { color: white; text-decoration: none; padding: 8px 20px; border-radius: 8px; font-size: 14px; background: rgba(255,255,255,0.15); transition: all 0.3s; }
+        .header a:hover { background: rgba(255,255,255,0.25); }
+        .container { max-width: 700px; margin: 0 auto; padding: 40px; }
+        .card { background: white; border-radius: 16px; padding: 32px; margin-bottom: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .card h2 { color: #1f2937; font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+        .card p { color: #6b7280; font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
+        .form-group { margin-bottom: 24px; }
+        .form-group label { display: block; color: #374151; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+        .form-group input { width: 100%; padding: 14px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 15px; font-family: inherit; transition: all 0.3s; }
+        .form-group input:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 4px rgba(79,70,229,0.1); }
+        .form-group .hint { color: #9ca3af; font-size: 12px; margin-top: 6px; }
+        .preview { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4f46e5 100%); border-radius: 16px; padding: 32px; color: white; margin-top: 32px; }
+        .preview h3 { font-size: 24px; font-weight: 600; margin-bottom: 12px; }
+        .preview .subtitle { font-size: 14px; opacity: 0.9; margin-bottom: 16px; }
+        .preview .badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 6px 16px; border-radius: 20px; font-size: 13px; }
+        .submit-btn { padding: 14px 32px; background: #4f46e5; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .submit-btn:hover { background: #4338ca; }
+        .success-message { display: none; background: #d1fae5; color: #059669; padding: 16px; border-radius: 10px; margin-bottom: 20px; }
+        .success-message.show { display: block; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>问卷设置</h1>
+            <a href="/dashboard">返回后台</a>
+        </div>
+    </div>
+    <div class="container">
+        <div class="card">
+            <h2>问卷标题设置</h2>
+            <p>设置问卷的标题、副标题、提示语和建议问题。标题将自动拼接"调查"二字。</p>
+            
+            <div class="success-message" id="successMsg">保存成功！</div>
+            
+            <form id="settingsForm">
+                <div class="form-group">
+                    <label>问卷主题（不含"调查"）</label>
+                    <input type="text" name="title" id="titleInput" value="{{ title }}" placeholder="例如：员工满意度" required>
+                    <div class="hint">输入主题名称，问卷标题将显示为"主题名称问卷调查"</div>
+                </div>
+                <div class="form-group">
+                    <label>副标题</label>
+                    <input type="text" name="subtitle" id="subtitleInput" value="{{ subtitle }}" placeholder="请如实填写您的意见" required>
+                </div>
+                <div class="form-group">
+                    <label>提示语</label>
+                    <input type="text" name="badge" id="badgeInput" value="{{ badge }}" placeholder="匿名问卷 · 您的回答将严格保密" required>
+                </div>
+                <div class="form-group">
+                    <label>建议问题标题</label>
+                    <input type="text" name="suggestion_title" id="suggestionTitleInput" value="{{ suggestion_title }}" placeholder="您对公司还有哪些建议？" required>
+                    <div class="hint">问卷最后一道开放式问题的标题</div>
+                </div>
+                <button type="submit" class="submit-btn">保存设置</button>
+            </form>
+        </div>
+        
+        <div class="preview">
+            <h3 id="previewTitle">{{ title }}调查</h3>
+            <div class="subtitle" id="previewSubtitle">{{ subtitle }}</div>
+            <span class="badge" id="previewBadge">{{ badge }}</span>
+            <div class="preview-suggestion" id="previewSuggestion" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.2);">
+                <div style="font-size: 16px; font-weight: 500; margin-bottom: 12px;">{{ suggestion_title }}</div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const titleInput = document.getElementById('titleInput');
+        const subtitleInput = document.getElementById('subtitleInput');
+        const badgeInput = document.getElementById('badgeInput');
+        const suggestionTitleInput = document.getElementById('suggestionTitleInput');
+        
+        const previewTitle = document.getElementById('previewTitle');
+        const previewSubtitle = document.getElementById('previewSubtitle');
+        const previewBadge = document.getElementById('previewBadge');
+        const previewSuggestion = document.getElementById('previewSuggestion');
+        
+        titleInput.addEventListener('input', function() {
+            previewTitle.textContent = this.value + '调查';
+        });
+        
+        subtitleInput.addEventListener('input', function() {
+            previewSubtitle.textContent = this.value;
+        });
+        
+        badgeInput.addEventListener('input', function() {
+            previewBadge.textContent = this.value;
+        });
+        
+        suggestionTitleInput.addEventListener('input', function() {
+            previewSuggestion.querySelector('div').textContent = this.value;
+        });
+        
+        document.getElementById('settingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            fetch('/settings', {
+                method: 'POST',
+                body: formData
+            }).then(() => {
+                document.getElementById('successMsg').classList.add('show');
+                setTimeout(() => {
+                    document.getElementById('successMsg').classList.remove('show');
+                }, 3000);
+            });
+        });
+    </script>
+</body>
+</html>

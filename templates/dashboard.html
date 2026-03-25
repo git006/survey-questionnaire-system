@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据概览 - {{ system_title }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', -apple-system, sans-serif; background: #f3f4f6; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #1e1b4b 0%, #4f46e5 100%); padding: 24px 40px; color: white; }
+        .header-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 22px; font-weight: 600; }
+        .header a { color: white; text-decoration: none; padding: 8px 20px; border-radius: 8px; font-size: 14px; background: rgba(255,255,255,0.15); transition: all 0.3s; }
+        .header a:hover { background: rgba(255,255,255,0.25); }
+        .container { max-width: 1200px; margin: 0 auto; padding: 40px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 40px; }
+        .stat-card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: all 0.3s; }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.1); }
+        .stat-card .title { color: #6b7280; font-size: 14px; margin-bottom: 12px; }
+        .stat-card .value { font-size: 36px; font-weight: 700; color: #1f2937; }
+        .stat-card.highlight .value { color: #4f46e5; }
+        .nav-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .nav-card { background: white; border-radius: 16px; padding: 24px; text-decoration: none; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: all 0.3s; }
+        .nav-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.1); }
+        .nav-card .icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; }
+        .nav-card .icon svg { width: 28px; height: 28px; }
+        .nav-card.blue .icon { background: #e0e7ff; }
+        .nav-card.blue .icon svg { fill: #4f46e5; }
+        .nav-card.green .icon { background: #d1fae5; }
+        .nav-card.green .icon svg { fill: #10b981; }
+        .nav-card.orange .icon { background: #fef3c7; }
+        .nav-card.orange .icon svg { fill: #f59e0b; }
+        .nav-card .text h3 { color: #1f2937; font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+        .nav-card .text p { color: #9ca3af; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>{{ system_title }}</h1>
+            <div style="display:flex; align-items:center; gap:16px;">
+                <span style="background:rgba(255,255,255,0.2); padding:8px 16px; border-radius:8px; font-size:14px;">admin</span>
+                <a href="/logout">退出登录</a>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="nav-cards">
+            <a href="/settings" class="nav-card orange"><div class="icon"><svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></div><div class="text"><h3>问卷设置</h3><p>自定义标题和提示</p></div></a>
+            <a href="/questions" class="nav-card blue"><div class="icon"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></div><div class="text"><h3>问题管理</h3><p>自定义问卷问题</p></div></a>
+            <a href="/surveys" class="nav-card green"><div class="icon"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg></div><div class="text"><h3>问卷反馈结果</h3><p>已收到问卷数({{ total }})</p></div></a>
+        </div>
+    </div>
+</body>
+</html>
